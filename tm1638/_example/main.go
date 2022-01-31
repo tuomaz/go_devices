@@ -1,7 +1,9 @@
 package main
 
 import (
-	"github.com/suapapa/go_devices/tm1638"
+	"time"
+
+	"github.com/tuomaz/go_devices/tm1638"
 	"periph.io/x/periph/conn/gpio/gpioreg"
 	"periph.io/x/periph/host"
 )
@@ -15,12 +17,13 @@ func main() {
 		gpioreg.ByName("17"), // data
 		gpioreg.ByName("27"), // clk
 		gpioreg.ByName("22"), // stb
+		5,
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	dev.SetString("HelloWrd")
+	dev.SetString(time.Now().Format("2006.01.02"))
 	for i := 0; i < 8; i++ {
 		if i%2 == 0 {
 			dev.SetLed(i, tm1638.Green)
