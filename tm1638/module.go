@@ -25,8 +25,9 @@ const (
 
 // Module represents tm1638 based module
 type Module struct {
-	data     gpio.PinIO
-	clk, stb gpio.PinOut
+	data      gpio.PinIO
+	clk, stb  gpio.PinOut
+	intensity uint8
 }
 
 // Open opens a tm1638 Module
@@ -34,11 +35,12 @@ type Module struct {
 //   * data : data pin
 //   * clk : clock pin
 //   * stb : strobe pin
-func Open(data gpio.PinIO, clk, stb gpio.PinOut) (*Module, error) {
+func Open(data gpio.PinIO, clk, stb gpio.PinOut, intensity uint8) (*Module, error) {
 	m := &Module{
-		data: data,
-		clk:  clk,
-		stb:  stb,
+		data:      data,
+		clk:       clk,
+		stb:       stb,
+		intensity: intensity,
 	}
 
 	if err := m.init(); err != nil {
@@ -81,9 +83,17 @@ func (m *Module) SetChar(pos int, c rune, dot bool) {
 // SetString sets FND to given str
 func (m *Module) SetString(str string) {
 	i := 0
+	dot := false
 	for _, r := range str {
-		m.SetChar(i, r, false)
+		if r == '.' {
+			dot = true
+			continue
+		}
+		m.SetChar(i, r, dot)
 		i++
+		if r != '.' {
+			dot = false
+		}
 	}
 }
 
@@ -107,9 +117,8 @@ func (m *Module) init() error {
 
 	m.sendCmd(0x40)
 
-	intensity := byte(0x07)
 	activeDisplay := byte(0x08)
-	m.sendCmd(0x80 | intensity | activeDisplay)
+	m.sendCmd(0x80 | m.intensity | activeDisplay)
 
 	m.sendCmd(0xC0)
 	for i := 0; i < 16; i++ {
